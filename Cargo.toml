@@ -1,0 +1,7 @@
+[package]
+name = "dive-into-rust"
+version = "0.1.0"
+authors = ["ehcayen <yanyi.x.chen@ericsson.com>"]
+edition = "2018"
+
+[dependencies]
