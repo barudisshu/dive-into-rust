@@ -215,3 +215,400 @@ pub fn _02_01_05_constant() {
     // 以const声明的一个常量，也不具备类型let语句的模式匹配功能
     const _GLOBAL: i32 = 0;
 }
+
+/// bool
+pub fn _02_02_01_bool() {
+
+    let x = true;
+    let y: bool = !x;
+
+    let z = x && y;
+    println!("{}", z);
+
+    let z = x || y;
+    println!("{}", z);
+
+    let z = x & y;
+    println!("{}", z);
+
+    let z = x | y;
+    println!("{}", z);
+
+    let z = x ^ y;
+    println!("{}", z);
+
+    fn logical_op(x: i32, y: i32) {
+        let z: bool = x < y;
+        println!("{}", z);
+    }
+
+    //    if a >= b {
+    //
+    //    } else {
+    //
+    //    }
+}
+
+/// 字符类型
+pub fn _02_02_02_char() {
+    let love = '❤';         // 可以直接嵌入任何 unicode 字符
+    let c1 = '\n';          // 换行符
+    let c2 = '\x7f';        // 8 bit 字符变量
+    let c3 = '\u{7FFF}';    // unicode 字符
+
+    println!("{} {} {} {}", love, c1, c2, c3);
+
+    // 因为char类型的设计目的是描述任意一个unicode字符，因此它占据的内存空间不是1个字节，而是4个字节
+
+    // 对于ASCII字符其实只需要占用一个字节的空间，因此Rust提供了单字节字符字面量来表示ASCII字符。
+    // 我们可以使用一个字母b在字符或者字符串前面，代表这个字面量存储在u8类型数组中，这样占用空间
+    // 比char型数组要小一些。示例如下：
+
+    let x: u8 = 1;
+    let y: u8 = b'A';
+    let s: &[u8;5] = b"hello";
+    let r: &[u8;14] = br#"hello \n world"#;
+
+    use std::str::from_utf8;
+    println!("{} {} {:?} {:?}", x, y, from_utf8(s).unwrap(), from_utf8(r).unwrap());
+}
+
+/// 整数类型
+/// 整数类型主要区别特征是：有符号/无符号，占据空间大小
+///
+/// 整数类型        有符号     无符号
+/// 8  bits         i8          u8
+/// 16 bits         i16         u16
+/// 32 bits         i32         u32
+/// 64 bits         i64         u64
+/// 128 bits        i128        u128
+/// Pointer size    isize       usize
+///
+///
+pub fn _02_02_03_integer() {
+
+    // 数字类型的字面量表示可以有许多方式
+    let _var1: i32 = 32;         // 十进制表示
+    let _var2: i32 = 0xFF;       // 以0x开头代表十六进制表示
+    let _var3: i32 = 0o55;       // 以0o开头代表八进制表示
+    let _var4: i32 = 0b1001;     // 以0b开头代表二进制表示
+
+    // 所有的数字字面量中，可以在任意地方添加任意的下划线，以方便阅读：
+    let _var5 = 0x_1234_ABCD;    // 使用下划线分隔数字，不影响语义，但极大提升了阅读体验
+    let _var6 = 123usize;        // var6变量是unsize类型
+    let _var7 = 0x_ff_u8;        // var7变量是u8类型
+    let _var8 = 32;              // 不写类型，默认为i32类型
+
+
+    let x: i32 = 9;
+    println!("9 power 3 = {}", x.pow(3));
+    // 或者直接对字面量调用函数
+    println!("9 power 3 = {}", 9_i32.pow(3));
+}
+
+
+/// 整数溢出
+pub fn _02_02_04_integer_overflow() {
+    // 在C语言中，对于无符号类型，算术运算永远不会overflow，如果超过表示范围
+    // 则自动舍弃高位数据。对于有符号类型，如果发生了overflow，标准规定这是undefined behavior,
+    // 也就是说随便怎么处理都可以。
+
+    // 未定义行为有利于编译器做一些更激进的性能优化，但是这样的规定有可能导致在程序员不知情的某些极端场景下
+    // 产生诡异的bug
+
+    // Rust中希望能尽量减少“未定义行为”。
+    // 默认情况下，在debug模式下编译器会自动插入整数溢出检查，一旦发生溢出，则会引发panic；
+    // 在release模式下，不检查整数溢出，采用自动舍弃高位的方式。
+
+    fn arithmetic(m: i8, n: i8) {
+        // 加法运算，有溢出风险
+        println!("{}", m + n);
+    }
+
+    let m: i8 = 120;
+    let n: i8 = 120;
+//    arithmetic(m, n);
+
+    // 可以带上`-O`选项表示一个编译优化版本，执行后没有错误，它使用了自动截断策略
+    // rustc -O test.rs
+
+    // 某些场景下，确实需要精细地自主控制整数溢出的行为，可以调用标准库中的checked_*、saturating_*和wrapping_*系列函数
+
+    let i = 100_i8;
+    println!("checked {:?}", i.checked_add(i));
+    println!("saturating {:?}", i.saturating_add(i));
+    println!("wrapping {:?}", i.wrapping_add(i));
+
+    // `checked_*`系列函数返回的类型是`Option<_>`，当出现溢出的时候，返回值是None;
+    // `saturating_*`系列函数返回类型是整数，如果溢出，则给出该类型可表示范围的“最大/最小”值；
+    // `wrapping_*`系列函数则是直接抛弃已经溢出的最高位，将剩下的部分返回。
+
+    // 在很多情况下，整数溢出应该被处理为截断，即丢弃最高位。为了方便用户，标准库还提供了一个
+    // 叫作`std::num::Wrapping<T>`的类型。它重载了基本的运算符，可以被当成普通整数使用。
+    // 凡是被它包裹起来的函数，任何时候出现溢出都是截断行为。
+
+    use std::num::Wrapping;
+    let big = Wrapping(std::u32::MAX);
+    let sum = big + Wrapping(2_u32);
+    println!("{}", sum.0);
+    // 不论用什么编译选项，上述代码都不会触发panic，任何情况下执行结果都是一致的。
+
+}
+
+/// 浮点类型
+pub fn _02_02_05_float() {
+    // Rust提供了基于IEEE 754-2008标准的浮点类型
+    // 按占据空间大小区分，分别为f32和f64
+    let _f1 = 123.0f64;     // type f64
+    let _f2 = 0.1f64;       // type f64
+    let _f3 = 0.1f32;       // type f32
+    let _f4 = 12E+99_f64;   // type f64 科学计数法
+    let _f5: f64 = 2.;      // type f64
+
+    // 与整数类型相比，Rust的浮点数类型相对复杂得多。浮点数的麻烦之处在于：它不仅可以表达正常的数值，还可以表达不正常的数值
+
+    // 在标准库中，有一个std::num::FpCategory枚举，表示了浮点数可能的状态：
+
+    enum FpCategory {
+        Nan,
+        Infinite,
+        Zero,
+        Subnormal,
+        Normal,
+    }
+
+    // Zero表示0值，
+    // Normal表示正常状态的浮点数，
+    // Subnormal表示的浮点数精度比Normal精度低一点，
+
+    // 变量small初始化为一个非常小的浮点数
+    let mut small = std::f32::EPSILON;
+    // 不断循环，让small越来越趁近于0，直到最后等于0的状态
+    while small > 0.0 {
+        small = small / 2.0;
+        println!("{} {:?}", small, small.classify());
+    }
+
+    // Infinite表示“无穷大”，
+    // Nan表示“不是数字”(not a number)。
+
+    let x = 1.0f32 / 0.0;   // 无穷大
+    let y = 0.0f32 / 0.0;   // 不是数字
+    println!("{} {}", x, y);
+
+    // 因为NaN的存在，浮点数是不具备“全序关系”(total order)的。
+    let inf = std::f32::INFINITY;
+    println!("{} {} {}", inf * 0.0, 1.0 / inf, inf / inf);
+    // 输出结果为 NaN 0 NaN
+
+    let nan = std::f32::NAN;
+    println!("{} {} {}", nan < nan, nan > nan, nan == nan);
+    // 输出结果为 false false false
+
+}
+
+/// 指针类型
+pub fn _02_02_06_pointer() {
+    // 无GC的编程语言，如C、C++以及Rust，对数据的组织操作有更多的自由度，具体表现为：
+
+    // 同一个类型，某些时候可以指定它在栈上，某些时候可以指定它在堆上。内存分配方式可以取决于使用方式，与类型本身无关。
+    // 既可以直接访问数据，也可以通过指针间接访问数据。可以针对任何一个对象取得指向它的指针。
+    // 既可以在复合数据类型中直接嵌入别的类型的实体，也可以使用指针，间接指向别的类型。
+    // 甚至可能在复合数据类型末尾嵌入不定长数据构造处不定长的复合数据类型。
+
+    // Rust中不止一种指针类型
+    // Box<T>       指向类型T的、具有所有权的指针，有权释放内存
+    // &T           指向类型T的借用指针，通常称为reference，无权释放内存，无权写数据，可租借数次，租借方拥有所有权。
+    // &mut T       指向类型T的mut型借用指针，也称为mut reference，无权释放内存，owner和borrower拥有所有权，有且仅能被租借一次，
+    // *const T     指向类型T的只读裸指针，没有生命周期信息，无权写数据
+    // *mut T       指向类型T的可读写裸指针，没有生命周期信息，有权写数据
+
+    // 除此之外还有一种封装起来的类型
+
+    // Rc<T>        指向类型T的引用计数指针，共享所有权，线程不安全
+    // Arc<T>       指向类型T的原子型引用计数指针，共享所有权，线程安全
+    // Cow<'a, T>   clone-on-write，写时复制指针。可能是借用指针，也可能是具有所有权的指针
+}
+
+// `as` 表达式允许的类型转换如下，
+// Integer or Float type        Integer or Float type
+// C-like enum                  Integer type
+// bool or char                 Integer type
+// u8                           char
+// *T                           *V where V: Sized *
+// *T where T: Sized            Numeric type
+// Integer type                 *V where V: Sized
+// &[T;n]                       *const T
+// Function pointer             *V where V: Sized
+// Function pointer             Integer
+
+// 更复杂的类型转换，一般使用标准库的From Into等trait
+/// 类型转换
+pub fn _02_02_07_type_transform() {
+    let var1: i8 = 41;
+    let var2: i16 = var1 as i16;    // Rust 希望可以显式标记类型转换，以防止隐藏的bug
+
+    let i = 42;
+    // 先转换为*const i32, 再转换为*mut i32
+    let p = &i as *const i32 as *mut i32;
+    println!("{:p}", p);
+
+
+}
+
+/// 元组类型
+///
+pub fn _02_03_01_tuple() {
+    let a = (1i32, false);          // 元组中包含两个元素，第一个是i32类型，第二个是bool类型
+    let b = ("a", (1i32, 2i32));    // 元组中包含两个元素，第二个元素本身也是元组
+
+    // 如果元组仅包含一个元素，应该在后面添加一个逗号，以区分括号表达式和元组
+    let a = (0,);
+    let b = (0);
+
+    // 访问元组内部元素有两种方法，一种是“模式匹配(pattern destructuring)”，另外一种是“数字索引”
+    let p = (1i32, 2i32);
+    let (a, b) = p;
+
+    let x = p.0;
+    let y = p.1;
+
+    println!("{} {} {} {}", a, b, x, y);
+
+    // 一个元素都没有的元组，叫做unit，是Rust中最简单的类型之一，也是占空间最小的类型之一。
+    // 空元组和空结构体`struct Foo;`一样，都是占用0内存空间
+
+    println!("size of i8 {}", std::mem::size_of::<i8>());       // 1 byte
+    println!("size of char {}", std::mem::size_of::<char>());   // 4 bytes
+    println!("size of '()' {}", std::mem::size_of::<()>());     // 0 byte
+
+
+}
+
+/// 结构体
+pub fn _02_03_02_struct() {
+    // 结构体和元组类似，但用下标+字段访问
+    struct Point {
+        x: i32,
+        y: i32,
+    }
+    let p = Point { x: 0, y: 0};
+    println!("Point is at {} {}", p.x, p.y);
+
+    // 如果局部变量名字和成员变量名字恰好一致，那么可以省略掉重复的冒号初始化
+
+    let x = 10;
+    let y = 20;
+    let o = Point {x, y};
+    println!("Point is at {} {}", o.x, o.y);
+
+    // 模式匹配对结构体也适用
+    let q = Point { x: 0, y: 0 };
+    let Point {x: px, y: py} = q;
+    println!("Point is at {} {}", px, py);
+
+    // 同样，变量名和字段名相同时，可以简写
+    let Point { x, y } = q;
+    println!("Point is at {} {}", x, y);
+
+    // Rust设计了一个语法糖，允许用一种简化的语法赋值使用另外一个struct的部分成员
+
+    struct Point3d {
+        x: i32,
+        y: i32,
+        z: i32,
+    }
+
+    fn default() -> Point3d {
+        Point3d { x: 0, y: 0, z: 0 }
+    }
+
+    // 可以使用default()函数初始化其它的元素
+    // ...expr 这样的语法，只能放在初始化表达式中，所有成员的最后最多只能有一个
+    let origin = Point3d { x: 5, ..default() };
+    let point = Point3d { z: 1, x: 2, ..origin };
+
+    // 和tuple类似，struct内部成员也可以是空
+    struct Foo1;
+    struct Foo2();
+    struct Foo3{}
+}
+
+/// 元组-结构体
+/// tuple-struct
+pub fn _02_03_03_tuple_struct() {
+    struct Color(i32, i32, i32);
+    struct Point(i32, i32, i32);
+
+    // 区别于tuple和struct，tuple-structs这种结构不能为空
+    // 另外tuple属于原生类型primitive type
+
+    struct T1 {
+        v: i32
+    }
+    struct T2(i32);
+
+    let v1 = T1 { v: 1};
+    let v2 = T2(1);
+    let v3 = T2 { 0: 1};
+
+    let i1 = v1.v;
+    let i2 = v2.0;
+    let i3 = v3.0;
+
+    // tuple-struct 的使用场景不多见
+}
+
+/// 枚举
+pub fn _02_03_04_enum() {
+
+    enum Number {
+        Int(i32),
+        Float(f32),
+    }
+
+    fn read_num(num: &Number) {
+        match num {
+            &Number::Int(value) => println!("Integer {}", value),
+            &Number::Float(value) => println!("Float {}", value),
+        }
+    }
+
+    let n: Number = Number::Int(10);
+    read_num(&n);
+
+    println!("Size of Number: {}", std::mem::size_of::<Number>());
+    println!("Size of i32:    {}", std::mem::size_of::<i32>());
+    println!("Size of f32:    {}", std::mem::size_of::<f32>());
+
+    enum Foo {
+        Bar,            // 0     , 若声明的第一个变数(variant)没有指定，则初始化为0
+        Baz = 123,      // 123   , 对于每个未被指定的判别式，设置比前一个高的值
+        Quux,           // 124   , enum的设值类型仅可以是isize
+    }
+
+    let baz_discriminant = Foo::Baz as u32;
+    assert_eq!(baz_discriminant, 123);
+
+    enum Animal {
+        Dog = 1,
+        Cat = 2 | 3 | 4,// 位运算，结果为7
+        Tiger,
+    }
+
+    let x = Animal::Tiger as isize;
+    assert_eq!(x, 8);
+
+    let arr = [1, 2, 3, 4, 5];
+    let v: Vec<Option<&i32>> = arr.iter().map(Some).collect();
+    println!("{:?}", v);
+}
+
+/// 类型递归定义
+pub fn _02_03_05_type_recursion() {
+
+    struct Recursive {
+        data: i32,
+        rec: Box<Recursive>,    // 通过指针间接引用的方式，控制递归类型的内存
+    }
+}
