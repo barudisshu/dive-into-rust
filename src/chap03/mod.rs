@@ -46,13 +46,121 @@ pub fn _03_02_02_assignment_expression() {
     let i = 2;
     let mut j = 4;
     j += i;
-    y *= i;
-    println!("{} {}", i, y);
+    j *= i;
+    println!("{} {}", i, j);
 
     // Rust中不支持++、--运算符，请使用+=1、-=1代替
 }
 
-/// 语句表达式
+/// 语句块表达式
 pub fn _03_02_03_statement_expression() {
 
+    // 语句和表达式的区分方式是后面带不带分号(;)
+    // 如果带分号，意味着这是一条语句，它的类型是`()`；
+    // 如果不带分号，它的类型就是表达式的类型
+
+    let x: () = {println!("Hello.");};
+    let y: i32 = {println!("Hello.");5};
+
+    // 同理，在函数中，我们也可以利用这样的特点来写返回值：
+
+    fn my_func() -> i32 {
+        //........
+        100
+    }
+}
+
+/// 条件语句
+pub fn _03_03_01_condition() {
+
+    fn func(n: i32) {
+        if n < 0 {      // 和其它语言不同，即使是一条表达式，也要用大括号包起来
+            print!("{} is negative", n);
+        } else if n > 0 {
+            print!("{} is positive", n);
+        } else {
+            print!("{} is zero", n);
+        }
+    }
+
+    // if-else 结构还可以当表达式使用
+    let x: i32 = if true { 1 } else { 10 };
+
+    // 基于这个原因，Rust中没有所谓的三元表达式写法
+}
+
+/// 循环语句
+pub fn _03_03_01_loop() {
+
+    let mut count = 0u32;
+    println!("Let's count until infinity!");
+
+    loop {
+        count += 1;
+        if count == 3 {
+            println!("three");
+            // 不再执行下面的代码，跳至loop开头继续循环
+            continue;
+        }
+        println!("{}", count);
+        if count == 5 {
+            println!("OK, that's enough");
+            // 跳出循环
+            break;
+        }
+    }
+}
+
+/// 带有生命周期标识符
+pub fn _03_03_01_loop_with_lifetime_specifier() {
+    let mut m = 1;
+    let n = 1;
+    'a: loop {
+        if m < 100 {
+            m += 1;
+        } else {
+            'b: loop {
+                if m + n > 50 {
+                    println!("break");
+                    break 'a;
+                } else {
+                    continue 'a;
+                }
+            }
+        }
+    }
+}
+
+pub fn _03_03_01_loop_expression() {
+    let v = loop {
+        break 10;
+    };
+    println!("{}", v);
+}
+
+/// while 语句是带条件判断的循环语句
+pub fn _03_03_01_while() {
+
+    let mut n = 1;
+    while n < 101 {
+        if n % 15 == 0 {
+            println!("fizzbuzz");
+        } else if n % 3 == 0 {
+            println!("fizz");
+        } else if n % 5 == 0 {
+            println!("buzz");
+        } else {
+            println!("{}", n);
+        }
+        // Increment counter
+        n += 1;
+    }
+}
+
+/// for循环
+pub fn _03_03_01_for() {
+    let array = &[1, 2, 3, 4, 5];
+    for i in array {
+        println!("The number is {}", i);
+    }
 }
