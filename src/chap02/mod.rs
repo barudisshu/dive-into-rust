@@ -7,12 +7,14 @@ mod adt {
 ///
 /// 变量必须先声明，后使用。
 ///
-pub fn _02_01_variable_declaration() {
+#[test]
+fn _02_01_variable_declaration() {
     let _variable: i32 = 100;
 }
 
 /// `let` 关键字，既是声明语句，也是 **模式解构(pattern destructure)**
-pub fn _02_03_pattern_destructure() {
+#[test]
+fn _02_03_pattern_destructure() {
     // `mut x`被视作一个组合
     let mut _x = 5;
     _x = 10;
@@ -37,7 +39,8 @@ pub fn _02_03_pattern_destructure() {
 }
 
 /// 类型没有“默认构造函数”，变量没有“默认值”。
-pub fn _02_03_initialization(condition: bool) {
+#[test]
+fn _02_03_initialization(condition: bool) {
     // 声明 x，不必使用 mut 修饰
     let x: i32;
     if condition {
@@ -50,7 +53,8 @@ pub fn _02_03_initialization(condition: bool) {
 }
 
 /// 占位符表示忽略这个变量绑定，后面不再用到
-pub fn _02_03_placeholder() {
+#[test]
+fn _02_03_placeholder() {
     let _ = "hello";
     // println!("{}", _);
     let arr = ['a', 'b', 'c'];
@@ -65,7 +69,8 @@ pub fn _02_03_placeholder() {
 }
 
 /// 变量遮蔽
-pub fn _02_01_01_variable_shadowing() {
+#[test]
+fn _02_01_01_variable_shadowing() {
     let x = "hello";
     println!("x is {}", x);
 
@@ -94,7 +99,8 @@ pub fn _02_01_01_variable_shadowing() {
 
 
 /// 类型推导
-pub fn _02_01_02_type_infer() {
+#[test]
+fn _02_01_02_type_infer() {
     // 没有明确标出变量的类型，但是通过字面量的后缀，
     // 编译器知道elem的类型为u8
     let elem = 5u8;
@@ -144,7 +150,8 @@ pub fn _02_01_02_type_infer() {
 }
 
 /// 类型别名，主要作用是为了简化代码
-pub fn _02_01_03_type_alias() {
+#[test]
+fn _02_01_03_type_alias() {
     type Age = u32;
 
     fn grow(age: Age, year: u32) -> Age {
@@ -160,7 +167,8 @@ pub fn _02_01_03_type_alias() {
 }
 
 /// 静态变量
-pub fn _02_01_04_static_variable() {
+#[test]
+fn _02_01_04_static_variable() {
     static _GLOBAL: i32 = 0;
     // 与`let`语句一样，static语句同样也是一个模式匹配。与let不同的是，
     // static声明的变量的生命周期是整个程序，从启动到退出。
@@ -208,7 +216,8 @@ pub fn _02_01_04_static_variable() {
 }
 
 /// 常量
-pub fn _02_01_05_constant() {
+#[test]
+fn _02_01_05_constant() {
     // const 声明的是常量，而不是变量，因此一定不允许使用mut关键字修饰这个变量绑定
     // 它与static变量的最大区别在于：编译器并不一定会给const常量分配内存空间，在编译过程中，
     // 它很可能会被内联优化。
@@ -217,7 +226,8 @@ pub fn _02_01_05_constant() {
 }
 
 /// bool
-pub fn _02_02_01_bool() {
+#[test]
+fn _02_02_01_bool() {
 
     let x = true;
     let y: bool = !x;
@@ -250,7 +260,8 @@ pub fn _02_02_01_bool() {
 }
 
 /// 字符类型
-pub fn _02_02_02_char() {
+#[test]
+fn _02_02_02_char() {
     let love = '❤';         // 可以直接嵌入任何 unicode 字符
     let c1 = '\n';          // 换行符
     let c2 = '\x7f';        // 8 bit 字符变量
@@ -285,7 +296,8 @@ pub fn _02_02_02_char() {
 /// Pointer size    isize       usize
 ///
 ///
-pub fn _02_02_03_integer() {
+#[test]
+fn _02_02_03_integer() {
 
     // 数字类型的字面量表示可以有许多方式
     let _var1: i32 = 32;         // 十进制表示
@@ -308,7 +320,8 @@ pub fn _02_02_03_integer() {
 
 
 /// 整数溢出
-pub fn _02_02_04_integer_overflow() {
+#[test]
+fn _02_02_04_integer_overflow() {
     // 在C语言中，对于无符号类型，算术运算永远不会overflow，如果超过表示范围
     // 则自动舍弃高位数据。对于有符号类型，如果发生了overflow，标准规定这是undefined behavior,
     // 也就是说随便怎么处理都可以。
@@ -356,7 +369,8 @@ pub fn _02_02_04_integer_overflow() {
 }
 
 /// 浮点类型
-pub fn _02_02_05_float() {
+#[test]
+fn _02_02_05_float() {
     // Rust提供了基于IEEE 754-2008标准的浮点类型
     // 按占据空间大小区分，分别为f32和f64
     let _f1 = 123.0f64;     // type f64
@@ -408,7 +422,8 @@ pub fn _02_02_05_float() {
 }
 
 /// 指针类型
-pub fn _02_02_06_pointer() {
+#[test]
+fn _02_02_06_pointer() {
     // 无GC的编程语言，如C、C++以及Rust，对数据的组织操作有更多的自由度，具体表现为：
 
     // 同一个类型，某些时候可以指定它在栈上，某些时候可以指定它在堆上。内存分配方式可以取决于使用方式，与类型本身无关。
@@ -444,7 +459,8 @@ pub fn _02_02_06_pointer() {
 
 // 更复杂的类型转换，一般使用标准库的From Into等trait
 /// 类型转换
-pub fn _02_02_07_type_transform() {
+#[test]
+fn _02_02_07_type_transform() {
     let var1: i8 = 41;
     let var2: i16 = var1 as i16;    // Rust 希望可以显式标记类型转换，以防止隐藏的bug
 
@@ -458,7 +474,8 @@ pub fn _02_02_07_type_transform() {
 
 /// 元组类型
 ///
-pub fn _02_03_01_tuple() {
+#[test]
+fn _02_03_01_tuple() {
     let a = (1i32, false);          // 元组中包含两个元素，第一个是i32类型，第二个是bool类型
     let b = ("a", (1i32, 2i32));    // 元组中包含两个元素，第二个元素本身也是元组
 
@@ -486,7 +503,8 @@ pub fn _02_03_01_tuple() {
 }
 
 /// 结构体
-pub fn _02_03_02_struct() {
+#[test]
+fn _02_03_02_struct() {
     // 结构体和元组类似，但用下标+字段访问
     struct Point {
         x: i32,
@@ -536,7 +554,8 @@ pub fn _02_03_02_struct() {
 
 /// 元组-结构体
 /// tuple-struct
-pub fn _02_03_03_tuple_struct() {
+#[test]
+fn _02_03_03_tuple_struct() {
     struct Color(i32, i32, i32);
     struct Point(i32, i32, i32);
 
@@ -560,7 +579,8 @@ pub fn _02_03_03_tuple_struct() {
 }
 
 /// 枚举
-pub fn _02_03_04_enum() {
+#[test]
+fn _02_03_04_enum() {
 
     enum Number {
         Int(i32),
@@ -605,7 +625,8 @@ pub fn _02_03_04_enum() {
 }
 
 /// 类型递归定义
-pub fn _02_03_05_type_recursion() {
+#[test]
+fn _02_03_05_type_recursion() {
 
     struct Recursive {
         data: i32,

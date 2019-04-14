@@ -1,5 +1,6 @@
 
-pub fn _03_02_01_expression() {
+#[test]
+fn _03_02_01_expression() {
 
     let x = 100;
     let y = 10;
@@ -32,7 +33,8 @@ pub fn _03_02_01_expression() {
 }
 
 /// 赋值表达式
-pub fn _03_02_02_assignment_expression() {
+#[test]
+fn _03_02_02_assignment_expression() {
     // 声明局部变量，带mut修饰
     let mut x: i32 = 1;
     // x 是mut绑定，所以可以为它重新赋值
@@ -53,7 +55,8 @@ pub fn _03_02_02_assignment_expression() {
 }
 
 /// 语句块表达式
-pub fn _03_02_03_statement_expression() {
+#[test]
+fn _03_02_03_statement_expression() {
 
     // 语句和表达式的区分方式是后面带不带分号(;)
     // 如果带分号，意味着这是一条语句，它的类型是`()`；
@@ -71,7 +74,8 @@ pub fn _03_02_03_statement_expression() {
 }
 
 /// 条件语句
-pub fn _03_03_01_condition() {
+#[test]
+fn _03_03_01_condition() {
 
     fn func(n: i32) {
         if n < 0 {      // 和其它语言不同，即使是一条表达式，也要用大括号包起来
@@ -90,7 +94,8 @@ pub fn _03_03_01_condition() {
 }
 
 /// 循环语句
-pub fn _03_03_01_loop() {
+#[test]
+fn _03_03_01_loop() {
 
     let mut count = 0u32;
     println!("Let's count until infinity!");
@@ -112,7 +117,8 @@ pub fn _03_03_01_loop() {
 }
 
 /// 带有生命周期标识符
-pub fn _03_03_01_loop_with_lifetime_specifier() {
+#[test]
+fn _03_03_01_loop_with_lifetime_specifier() {
     let mut m = 1;
     let n = 1;
     'a: loop {
@@ -131,7 +137,8 @@ pub fn _03_03_01_loop_with_lifetime_specifier() {
     }
 }
 
-pub fn _03_03_01_loop_expression() {
+#[test]
+fn _03_03_01_loop_expression() {
     let v = loop {
         break 10;
     };
@@ -139,7 +146,8 @@ pub fn _03_03_01_loop_expression() {
 }
 
 /// while 语句是带条件判断的循环语句
-pub fn _03_03_01_while() {
+#[test]
+fn _03_03_01_while() {
 
     let mut n = 1;
     while n < 101 {
@@ -158,7 +166,8 @@ pub fn _03_03_01_while() {
 }
 
 /// for循环
-pub fn _03_03_01_for() {
+#[test]
+fn _03_03_01_for() {
     let array = &[1, 2, 3, 4, 5];
     for i in array {
         println!("The number is {}", i);

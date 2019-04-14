@@ -1,6 +1,7 @@
 
 /// 成员方法
-pub fn _05_01_01_trait_method() {
+#[test]
+fn _05_01_01_trait_method() {
 
     trait Shape {
         fn area(&self) -> f64;
@@ -63,7 +64,8 @@ pub fn _05_01_01_trait_method() {
 }
 
 /// 让trait的self是指针类型
-pub fn _05_01_01_boxing_self() {
+#[test]
+fn _05_01_01_boxing_self() {
 
     trait Shape {
         fn area(self: Box<Self>) -> f64;
@@ -87,7 +89,8 @@ pub fn _05_01_01_boxing_self() {
 }
 
 /// impl 的对象甚至可以是trait
-pub fn _05_01_01_impl_trait() {
+#[test]
+fn _05_01_01_impl_trait() {
     trait Shape {
         fn area(&self) -> f64;
     }
@@ -127,7 +130,8 @@ pub fn _05_01_01_impl_trait() {
 /// 静态方法可以通过Type::FunctionName()的方式调用。
 ///
 /// 需要注意的是，即便第一个参数是Self相关类型，只要变量名不是self，就不能使用小数点的语法调用函数.
-pub fn _05_02_01_static_method() {
+#[test]
+fn _05_02_01_static_method() {
 
     struct T(i32);
 
@@ -150,7 +154,8 @@ pub fn _05_02_01_static_method() {
 }
 
 /// 静态函数
-pub fn _05_02_01_static_function() {
+#[test]
+fn _05_02_01_static_function() {
 
     // 无参数的函数，返回类型是实现该trait的具体类型
     trait Default {
@@ -159,7 +164,8 @@ pub fn _05_02_01_static_function() {
 }
 
 /// 扩展方法
-pub fn _05_03_01_method_extension() {
+#[test]
+fn _05_03_01_method_extension() {
 
     // 可以利用trait给其它类型添加成员方法
 
@@ -188,7 +194,8 @@ pub fn _05_03_01_method_extension() {
 /// 以前叫UFCS(universal function call syntax)，即“通用函数调用语法”。
 /// 它的具体写法为`<T as TraitName>::item`
 ///
-pub fn _05_04_01_ufcs() {
+#[test]
+fn _05_04_01_ufcs() {
 
     trait Cook {
         fn start(&self);
@@ -221,7 +228,8 @@ pub fn _05_04_01_ufcs() {
 }
 
 /// 函数和方法的调用本质上没有区别
-pub fn _05_04_02_method_function() {
+#[test]
+fn _05_04_02_method_function() {
     struct T(usize);
 
     impl T {
@@ -239,7 +247,8 @@ pub fn _05_04_02_method_function() {
 }
 
 /// trait约束和继承
-pub fn _05_05_01_trait_ad_hoc() {
+#[test]
+fn _05_05_01_trait_ad_hoc() {
 
     use std::fmt::Debug;
 
@@ -276,7 +285,8 @@ pub fn _05_05_01_trait_ad_hoc() {
 /// Rust里面为类型impl某些trait的时候，逻辑是非常机械化的。
 /// 为许多类型重复而单调地impl某些trait，是非常枯燥的事情。
 /// 为此，Rust提供了一个特殊的attribute，它可以帮我们自动impl某些trait
-pub fn _05_06_01_derive() {
+#[test]
+fn _05_06_01_derive() {
 
     #[derive(Copy, Clone, Default, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
     struct Foo {
@@ -299,7 +309,8 @@ pub fn _05_06_01_derive() {
 }
 
 /// trait 别名
-pub fn _05_07_01_trait_alias() {
+#[test]
+fn _05_07_01_trait_alias() {
 
 
 
@@ -315,7 +326,8 @@ pub fn _05_07_01_trait_alias() {
 }
 
 /// 标准库常见trait
-pub fn _05_08_01_display_and_debug() {
+#[test]
+fn _05_08_01_display_and_debug() {
 
     use std::fmt::{Display, Formatter, Error};
 
@@ -339,7 +351,8 @@ pub fn _05_08_01_display_and_debug() {
 
 /// 全序关系
 ///
-pub fn _05_08_02_ord_eq() {
+#[test]
+fn _05_08_02_ord_eq() {
 
     // 对于集合X中的元素a,b,c
     // 1. 如果a < b则一定有 !(a>b)；反之，若a > b，则一定有 !(a<b)，称为反对称性。
@@ -371,13 +384,15 @@ pub fn _05_08_02_ord_eq() {
 /// 它定义在std::marker模块中，没有任何成员方法。
 /// 它有`#[lang="sized"]`属性，它是lang级别的，用户不能impl这trait。
 /// 一个类型是否满足Sized约束完全由编译器推导的，用户无权指定
-pub fn _05_08_03_sized() {
+#[test]
+fn _05_08_03_sized() {
 
 }
 
 /// Rust中没有“构造函数”的概念。因为，相比普通函数，构造函数本身并没有提供什么额外的抽象能力。
 /// 所以默认所谓的“默认构造函数”，但可以通过impl Default来实现默认值。
-pub fn _05_08_04_default() {
+#[test]
+fn _05_08_04_default() {
 
     // 标准库提供了Default trait来处理无参数、无错误处理的“默认值”
     trait Default {

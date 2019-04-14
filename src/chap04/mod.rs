@@ -1,5 +1,6 @@
 
-pub fn _04_01_01_function() {
+#[test]
+fn _04_01_01_function() {
 
     fn add1(t: (i32, i32)) -> i32 {
         t.0 + t.1
@@ -32,7 +33,8 @@ pub fn _04_01_01_function() {
 
 }
 
-pub fn _04_01_01_function_body() {
+#[test]
+fn _04_01_01_function_body() {
     static INNER_STATIC: i64 = 42;
 
     // 函数内部定义函数
@@ -56,7 +58,8 @@ pub fn _04_01_01_function_body() {
 
 /// 发散函数
 /// Rust支持一种特殊的发散函数(Diverging functions)，它的返回类型是感叹号`!`。
-pub fn _04_02_01_diverging_functions() {
+#[test]
+fn _04_02_01_diverging_functions() {
 
     // 如果一个函数根本就不能正常返回，那么它可以这样写：
     fn diverges() -> ! {
@@ -78,7 +81,8 @@ pub fn _04_02_01_diverging_functions() {
 
 /// const fn
 /// 函数可以用`const`关键字修饰，这样的函数可以在编译阶段被编译器执行，返回值也被视为编译期常量
-pub fn _04_04_01_const_fn() {
+#[test]
+fn _04_04_01_const_fn() {
 
     #![feature(const_fn)]
     const fn cube(num: usize) -> usize {
@@ -91,7 +95,8 @@ pub fn _04_04_01_const_fn() {
 }
 
 /// 递归函数
-pub fn _04_05_01_recursive() {
+#[test]
+fn _04_05_01_recursive() {
 
     fn fib(index: u32) -> u64 {
         if index == 1 || index == 2 {
