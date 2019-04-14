@@ -1,7 +1,7 @@
-use crate::chap04::*;
+use crate::chap06::*;
 
-mod chap04;
+mod chap06;
 
 fn main() {
-    _04_05_01_recursive();
+    _06_01_01_array();
 }
