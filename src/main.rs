@@ -1,6 +1,10 @@
-use crate::chap06::*;
+#![feature(exclusive_range_pattern)]
+#![feature(core_intrinsics)]
+#![feature(if_while_or_patterns)]
 
-mod chap06;
+use crate::chap08::*;
+
+mod chap08;
 
 fn main() {
 }
