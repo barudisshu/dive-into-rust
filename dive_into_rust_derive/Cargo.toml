@@ -1,0 +1,16 @@
+[package]
+name = "dive_into_rust_derive"
+version = "0.1.0"
+authors = ["Galudisu <galudisu@gmail.com>"]
+edition = "2018"
+
+license = "MIT/Apache-2.0"
+readme = "README.MD"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = "0.13.1"
+quote = "0.5.1"
+proc-macro2 = "0.3.5"

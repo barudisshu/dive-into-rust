@@ -1,0 +1,13 @@
+[package]
+name = "dive_into_rust"
+version = "0.1.0"
+authors = ["Galudisu <galudisu@gmail.com>"]
+edition = "2018"
+
+license = "MIT/Apache-2.0"
+readme = "README.MD"
+
+[dependencies]
+bytes = "0.4"
+dive_into_rust_derive = { version = "0.1.0", path = "../dive_into_rust_derive" }
+uuid = { version = "0.6", features = ["v4"] }

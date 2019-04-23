@@ -1,10 +1,5 @@
-[package]
-name = "dive-into-rust"
-version = "0.1.0"
-authors = ["Galudisu <galudisu@gmail.com>"]
-edition = "2018"
-
-license = "MIT/Apache-2.0"
-readme = "README.MD"
-
-[dependencies]
+[workspace]
+members = [
+    "dive_into_rust",
+    "dive_into_rust_derive"
+]
