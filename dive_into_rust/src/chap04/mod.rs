@@ -59,6 +59,7 @@ fn _04_01_01_function_body() {
 /// 发散函数
 /// Rust支持一种特殊的发散函数(Diverging functions)，它的返回类型是感叹号`!`。
 #[test]
+#[should_panic]
 fn _04_02_01_diverging_functions() {
 
     // 如果一个函数根本就不能正常返回，那么它可以这样写：

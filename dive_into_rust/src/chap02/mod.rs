@@ -40,7 +40,11 @@ fn _02_03_pattern_destructure() {
 
 /// 类型没有“默认构造函数”，变量没有“默认值”。
 #[test]
-fn _02_03_initialization(condition: bool) {
+fn _02_03_initialization() {
+    use rand::Rng;
+    let mut rng = rand::thread_rng();
+
+    let condition: bool = rng.gen();
     // 声明 x，不必使用 mut 修饰
     let x: i32;
     if condition {
