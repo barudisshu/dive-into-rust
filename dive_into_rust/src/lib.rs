@@ -2,6 +2,7 @@
 #![feature(core_intrinsics)]
 #![feature(never_type)]
 #![deny(unused_extern_crates)]
+#![feature(if_while_or_patterns)]
 
 mod chap01;
 mod chap02;

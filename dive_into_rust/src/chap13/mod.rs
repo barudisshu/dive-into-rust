@@ -112,8 +112,66 @@ fn _13_02_01_borrow_rule() {
 
 }
 
+///
+/// 一般情况下，函数参数使用引用传递的时候，不仅在函数声明这里要写上类型参数，
+/// 在函数调用这里也要显式地引用运算符。
+///
+/// 但是，有个例外，当参数为`self` `&self` `&mut self`等时，若使用小数点语法调用成员方法，
+/// 在函数调用这里不能显式写出借用运算符。
+///
+#[test]
+fn _13_02_02_borrow_rule() {
+    // 创建一个可变的String 类型实例
+    let mut x: String = "hello".into();
+    // 调用`len(&self) -> usize`函数。`self`的类型是`&Self`
+    // `x.len()`等同于`String::len(&x)`
+    assert_eq!(6, x.len());
+    // 调用`fn push(&mut self, ch: char)`函数。`self`的类型是`&mut Self`，因此它有权对字符串做修改
+    // `x.push('!')`等同于`String::push(&mut x, '!')`
+    x.push('!');
+    assert_eq!(7, x.len());
+
+    // 调用`fn into_bytes(self) -> Vec<u8>`函数。注意self类型，此处发生了所有权转移
+    // `x.into_bytes()`等同于`String::into_bytes(x)`
+    let v = x.into_bytes();
+
+    // 再次调用`len()`，编译失败，因为此处已经超过了x的生命周期
+    // ILLEGAL: assert_eq!(7, x.len());
+}
 
 
+///
+/// 任何借用指针的存在，都会导致原来变量被“冻结(Frozen)”
+///
+#[test]
+fn _13_02_03_borrow_rule() {
+    let mut x = 1_i32;
+    let p = &mut x;
+    // ILLEGAL: x = 2;
+    assert_eq!(1, *p);
+
+    // 因为p的存在，此时对x的改变被认为是非法的
+}
+
+
+///
+/// 生命周期标识符
+///
+#[test]
+fn _13_03_01_lifetime_specifier() {
+
+    struct T {
+        member: i32,
+    }
+
+    fn test<'a>(arg: &'a T) -> &'a i32 {
+        &arg.member
+    }
+
+    let t = T { member: 0 };
+    let x = test(&t);
+    assert_eq!(0, x);
+}
 
 
 
