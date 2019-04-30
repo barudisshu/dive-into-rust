@@ -83,6 +83,8 @@ fn _15_01_01_nll_problem_case_variable_references() {
 #[test]
 fn _15_01_01_nll_problem_case_conditional_control_flow() {
 
+    use std::collections::HashMap;
+
     // This code will not compile today. The reason is tha the `map` is borrowed as part of the
     // call to `get_mut` and that borrow must encompass not only the call to `get_mut`. but also
     // the `Some` branch of the match. The innermost expression that encloses both of these expressions
@@ -127,6 +129,8 @@ fn _15_01_01_nll_problem_case_conditional_control_flow() {
 ///
 #[test]
 fn _15_01_01_nll_problem_case_conditional_control_flow_across_functions() {
+
+    use std::collections::HashMap;
 
     fn get_default<K, V: Default>(map: &mut HashMap<K, V>,
                                   key: K)
@@ -180,6 +184,20 @@ fn _15_01_01_nll_problem_case_conditional_control_flow_across_functions() {
                                    -> &mut V {
         map.entry(key)
             .or_insert_with(|| V::default())
+    }
+
+    {
+        // NLL 的原理
+        // 由于简单的使用 AST 分析最后使用的位置，会导致问题
+        // 新版本的借用检查器将 AST 转化为中间表达形式 MIR，这个数据结构会表述一个控制流图
+        {
+            // 这个功能只影响静态分析结果，不影响程序的执行情况
+            // 不会影响以前能通过编译的代码
+            // 依然保证了安全性，只是将以前过于保守的检查规则适当放宽
+            // 它依赖的是静态检查规则
+            // 它只影响引用类型的生命周期，不影响对象的生命周期
+            // 它不会影响 RAII 语义
+        }
     }
 }
 
