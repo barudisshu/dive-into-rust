@@ -156,6 +156,14 @@ fn _13_02_03_borrow_rule() {
 
 ///
 /// 生命周期标识符
+/// 借用指针类型都有一个泛型参数，它的完整写法应该是`&'a T` `&'a mut T`，只不过做局部变量的时候，生命周期参数可以省略
+///
+/// 生命周期之间有重要的包含关系，如果生命周期`'a`比`'b`更长或相等，记做`'a: 'b`，意思是`'a`至少不会比`'b`短，
+/// 读作'lifetime a outlives lifetime b'。对于借用指针来说，如果`&'a`合法，那么`'b`作为`'a`的一部分，`&'b`也一定是
+/// 合法的。
+///
+/// 另外，`'static`是一个特殊的生命周期，它代表的是这个程序从开始到结束的整个阶段，所以它比其他任何生命周期都长。
+/// 这意味着，任意一个生命周期`'a`都满足`'static: 'a`。
 ///
 #[test]
 fn _13_03_01_lifetime_specifier() {
@@ -170,28 +178,82 @@ fn _13_03_01_lifetime_specifier() {
 
     let t = T { member: 0 };
     let x = test(&t);
-    assert_eq!(0, x);
+    assert_eq!(0, *x);
 }
 
 
+#[test]
+fn _13_03_02_lifetime_specifier() {
+    struct T {
+        member: i32,
+    }
+    // 指定`'a: 'b`，要求`'a`要比`'b`活的长，这样`&'a i32`类型赋值给`&'b i32`类型就没有问题
+    fn test<'a, 'b>(arg: &'a T) -> &'b i32 where 'a: 'b {
+        &arg.member
+    }
+    let t = T { member: 0 };
+    let x = test(&t);
+    assert_eq!(0, *x);
+}
 
+///
+/// Rust的引用类型是支持“协变”的。
+/// 在编译期眼里，生命周期就是一个区间，生命周期参数就是一个普通的泛型参数，它可以被特化为某个具体的生命周期。
+///
+#[test]
+fn _13_03_03_lifetime_specifier() {
+    fn select<'a>(arg1: &'a i32, arg2: &'a i32) -> &'a i32 {
+        if *arg1 > *arg2 {
+            arg1
+        } else {
+            arg2
+        }
+    }
+    let x = 1;
+    let y = 2;
+    let selected = select(&x, &y);
+    assert_eq!(2, *selected);
+}
 
+///
+/// 类型的生命周期标记
+///
+#[test]
+fn _13_04_01_type_lifetime_specifier() {
+    struct Test<'a> {
+        member: &'a str,
+    }
 
+    // `impl`时，也要声明再使用
+    impl<'t> Test<'t> {
+        fn test<'a>(&self, s: &'a str) {
 
+        }
+    }
+}
 
+///
+/// 省略生命周期标记
+///
+/// “lifetime elision rules”
+///
+/// - 每个带生命周期参数的输入参数，每个对应不同的生命周期参数；
+/// - 如果只有一个输入参数带生命周期参数，那么返回值的生命周期被指定为这个参数；
+/// - 如果有多个输入参数带生命周期参数，但其中有`&self`，`&mut self`那么返回值的生命周期被指定为这个参数；
+/// - 以上都不满足，就不能自动补全返回值的生命周期参数。
+///
+#[test]
+fn _13_04_02_type_lifetime_specifier() {
 
+    fn get_str(s: &String) -> &str {
+        println!("call fn {}", s);
+        "hello world"
+    }
 
+    // 编译器会自动补全生命周期参数
+    fn get_str1<'a>(s: &'a String) -> &'static str {
+        println!("call fn {}", s);
+        "hello world"
+    }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+}
