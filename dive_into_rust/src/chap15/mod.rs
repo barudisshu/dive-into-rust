@@ -4,8 +4,6 @@
 //!
 //! Non-Lexical-Lifetime，非词法生命周期
 //!
-//! 主要致力于解决可读性方面的问题，这里会从几个例子着手
-//!
 //!
 //! [introduction](http://smallcultfollowing.com/babysteps/blog/2016/04/27/non-lexical-lifetimes-introduction/)
 //!
@@ -31,7 +29,7 @@ fn _15_01_01_nll() {
     } // <---------------------------------------+
 
 
-    fn capitalize(data: &mut [char]) {
+    fn capitalize(_data: &mut [char]) {
         // do something
     }
 }
@@ -55,7 +53,7 @@ fn _15_01_01_nll_problem_case_variable_references() {
         data.push('f'); // ERROR!  //   |
     } // <------------------------------+
 
-    fn capitalize(data: &mut [char]) {
+    fn capitalize(_data: &mut [char]) {
         // do something
     }
 
@@ -84,6 +82,7 @@ fn _15_01_01_nll_problem_case_variable_references() {
 fn _15_01_01_nll_problem_case_conditional_control_flow() {
 
     use std::collections::HashMap;
+    use std::hash::Hash;
 
     // This code will not compile today. The reason is tha the `map` is borrowed as part of the
     // call to `get_mut` and that borrow must encompass not only the call to `get_mut`. but also
@@ -92,7 +91,7 @@ fn _15_01_01_nll_problem_case_conditional_control_flow() {
     // the end of the match. Unfortunately, the match encloses not only the `Some` branch, but also
     // the `None` branch, and hence when we go to insert into the map in the `None` branch,
     // we get and error that the `map` is still borrowed.
-    fn process_or_default<K,V:Default>(map: &mut HashMap<K,V>,
+    fn process_or_default<K:Hash+Eq+Copy,V:Default>(map: &mut HashMap<K,V>,
                                        key: K) {
         match map.get_mut(&key) { // -------------+ 'lifetime
             Some(value) => process(value),     // |
@@ -105,7 +104,7 @@ fn _15_01_01_nll_problem_case_conditional_control_flow() {
 
     // This particular example is relatively easy to workaround. One can (frequently) move the code
     // for `None` out from the `match` like so:
-    fn process_or_default1<K,V:Default>(map: &mut HashMap<K,V>,
+    fn process_or_default1<K:Hash+Eq+Copy,V:Default>(map: &mut HashMap<K,V>,
                                         key: K) {
         match map.get_mut(&key) { // -------------+ 'lifetime
             Some(value) => {                   // |
@@ -118,7 +117,7 @@ fn _15_01_01_nll_problem_case_conditional_control_flow() {
         map.insert(key, V::default());
     }
 
-    fn process<V>(value: V) {
+    fn process<V>(_value: V) {
         // do something
     }
 }
@@ -131,11 +130,16 @@ fn _15_01_01_nll_problem_case_conditional_control_flow() {
 fn _15_01_01_nll_problem_case_conditional_control_flow_across_functions() {
 
     use std::collections::HashMap;
+    use std::hash::Hash;
 
-    fn get_default<K, V: Default>(map: &mut HashMap<K, V>,
+    // 编译器会认为在调用`get_mut(&key)`的时候，产生了一个指向map的`&mut`型引用
+    // 而且它的返回值也包含了一个引用，返回值的生命周期是和参数的生命周期一致的。
+    // 这个方法的返回值会一直存在于整个match语句块中，所以编译器判定，针对map的引用也是
+    // 一直存在于整个match语句块中。导致后面调用insert方法会发生冲突
+    fn get_default<K:Hash+Eq+Copy, V: Default>(map: &mut HashMap<K, V>,
                                   key: K)
                                   -> &mut V {
-        match map.get_mut(&key) { // -------------+ 'm
+        match map.get_mut(&key) { // -------------+ 'lifetime
             Some(value) => value,              // |
             None => {                          // |
                 map.insert(key, V::default()); // |
@@ -145,10 +149,35 @@ fn _15_01_01_nll_problem_case_conditional_control_flow_across_functions() {
         }                                      // |
     }                                          // v
 
-    fn get_default1<K, V: Default>(map: &mut HashMap<K, V>,
+    fn caller() {
+        let mut map: HashMap<i32, u64> = HashMap::new();
+        let key = 0_i32;
+        {
+            let v = get_default(&mut map, key); // -+ 'lifetime
+              // +-- get_default() -----------+ //  |
+              // | match map.get_mut(&key) {  | //  |
+              // |   Some(value) => value,    | //  |
+              // |   None => {                | //  |
+              // |     ..                     | //  |
+              // |   }                        | //  |
+              // +----------------------------+ //  |
+            process(v);                         //  |
+        } // <--------------------------------------+
+    }
+
+    fn process<V>(_value: V) {
+        // do something
+    }
+
+    // 编译依然失败。
+    // 原因在于return语句，`get_mut`时候对`map`的借用传递给了`Some(value)`，
+    // 在Some这个分支内存在一个引用，指向map的某个部分，而我们又把value返回了，
+    // 这意味着编译器认为，这个借用从match开始一直到退出这个函数都存在
+    // 因此后面的insert调用依然发生了冲突
+    fn get_default1<K:Hash+Eq+Copy, V: Default>(map: &mut HashMap<K, V>,
                                    key: K)
                                    -> &mut V {
-        match map.get_mut(&key) { // -------------+ 'm
+        match map.get_mut(&key) { // -------------+ 'lifetime
             Some(value) => return value,       // |
             None => { }                        // |
         }                                      // |
@@ -158,12 +187,17 @@ fn _15_01_01_nll_problem_case_conditional_control_flow_across_functions() {
     }                                          // v
 
 
-    fn get_default2<K, V: Default>(map: &mut HashMap<K, V>,
+    // 编译成功
+    // 区别在于，`get_mut`发生在一个子语句块中。这种情况下，编译器会认为这个借用
+    // 跟if外面的代码没什么关系。通过这种方式，我们终于绕过了borrow checker。
+    // 但是，为了绕过编译器的限制，我们付出了一些代价。我们需要执行两次hash查找，
+    // 一次在contains方法，一次在`get_mut`方法，因此它有额外的性能开销
+    fn get_default2<K:Hash+Eq+Copy, V: Default>(map: &mut HashMap<K, V>,
                                    key: K)
                                    -> &mut V {
-        if map.contains(&key) {
+        if map.contains_key(&key) {
             // ^~~~~~~~~~~~~~~~~~ 'n
-            return match map.get_mut(&key) { // + 'm
+            return match map.get_mut(&key) { // + 'lifetime
                 Some(value) => value,        // |
                 None => unreachable!()       // |
             };                               // v
@@ -179,17 +213,30 @@ fn _15_01_01_nll_problem_case_conditional_control_flow_across_functions() {
     //It’s worth noting that Rust’s hashmaps include an entry API that one could use to implement
     // this function today. The resulting code is both nicer to read and more efficient even than
     // the original version, since it avoids extra lookups on the “not present” path as well:
-    fn get_default3<K, V: Default>(map: &mut HashMap<K, V>,
+    fn get_default3<K:Hash+Eq+Copy, V: Default>(map: &mut HashMap<K, V>,
                                    key: K)
                                    -> &mut V {
         map.entry(key)
             .or_insert_with(|| V::default())
     }
 
+    // 让编译器能更准确地分析借用指针的生命周期，不要简单地与scope相绑定，
+    // 更符合用户直观思维模式
+    #[feacture(nll)]
+    fn get_default4<K:Hash+Eq+Copy, V: Default>(map: &mut HashMap<K, V>,
+                                                key: K)
+                                                -> &mut V {
+     match map.get_mut(&key) {
+         Some(value) => process(value),
+         None => {
+             map.insert(key, V::default())
+         }
+    }
+    }
     {
         // NLL 的原理
         // 由于简单的使用 AST 分析最后使用的位置，会导致问题
-        // 新版本的借用检查器将 AST 转化为中间表达形式 MIR，这个数据结构会表述一个控制流图
+        // 新版本的借用检查器将 AST 转化为中间表达形式 MIR(middle-level intermediate representation)，这个数据结构会表述一个控制流图
         {
             // 这个功能只影响静态分析结果，不影响程序的执行情况
             // 不会影响以前能通过编译的代码
@@ -200,31 +247,3 @@ fn _15_01_01_nll_problem_case_conditional_control_flow_across_functions() {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
