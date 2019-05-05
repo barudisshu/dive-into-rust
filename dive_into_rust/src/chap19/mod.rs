@@ -19,6 +19,8 @@
 //! rustc -C panic=abort test.rs
 //! ```
 //!
+//! panic并不意味着“内存不安全”，恰恰相反，它是阻止“内存不安全”的利器。内存不安全造成的问题比程序突然退出要严重得多。
+//!
 
 ///
 ///
@@ -45,6 +47,7 @@ fn _19_01_01_panic() {
 fn _19_01_02_panic() {
     use std::panic;
 
+    // catch_unwind 不是'try-catch'的替换模式，它不能在程序中作正常的逻辑处理
     panic::catch_unwind(|| {
         let x: Option<i32> = None;
         x.unwrap();
@@ -54,28 +57,81 @@ fn _19_01_02_panic() {
     println!("continue to execute. ");
 }
 
+///
+/// C++中引入了“异常”这个机制之后，同时也带入了一个“异常安全”(exception safety)的概念。
+/// 异常安全存在四种层次的保证：
+///
+/// - `No-throw` ——这种层次的安全性保证了所有的异常都在内部正确处理完毕，外部毫无影响；
+/// - `Strong exception safety` ——强异常安全保证可以保证异常发生的时候，所有的状态都可以“回滚”到初始状态，不会导致状态不一致的问题；
+/// - `Basic exception safety` ——基本异常安全保证可以保证异常发生的时候不会导致资源泄露；
+/// - `No exception safety` ——没有任何异常安全保证；
+///
+/// 当我们在系统中使用了“异常”的时候，就一定要想清楚，每个组件应该提供那种层级的异常安全保证。在Rust中，
+/// 这个问题同样存在，但是一般叫做panic safety，于“异常”说的是同一件事情。
+///
+#[test]
+fn _19_01_03_panic_safety() {
+    use std::panic;
+    use std::panic::AssertUnwindSafe;
 
+    let mut x: Vec<i32> = vec![1];
+    let mut y: Vec<i32> = vec![2];
 
+    // 使用AssertUnwindSafe这个类型，来确保catch_unwind函数约束
+    panic::catch_unwind(AssertUnwindSafe(|| {
+        x.push(10);
+        panic!("user panic");
+        y.push(100);
+    })).ok();
 
+    println!("Observe corrupteed data. {:?} {:?}", x, y);
+}
 
+///
+/// 多线程中，在某个线程中制造一个panic
+///
+#[test]
+fn _19_01_04_panic_thread() {
 
+    // 在thread2中，在达到某个条件的情况下会发生panic。这个panic是在Mutex锁定的状态下发生的。
+    // 这时，标准库会将Mutex设置为一个特殊的称为poisoned状态。处在这个状态下的Mutex，再次调用lock，
+    // 会返回Err状态。它里面依然包含了原来的数据，只不过用户需要显式调用into_inner才能使用它。
 
+    use std::sync::Arc;
+    use std::sync::Mutex;
+    use std::thread;
 
+    const COUNT: u32 = 1_000_000;
 
+    let global = Arc::new(Mutex::new(0));
 
+    let clone1 = global.clone();
+    let thread1 = thread::spawn(move || {
+       for _ in 0..COUNT {
+           match clone1.lock() {
+               Ok(mut value) => * value +=1,
+               Err(poisoned) => {
+                   let mut value = poisoned.into_inner();
+                   *value += 1;
+               }
+           }
+       }
+    });
 
+    let clone2 = global.clone();
+    let thread2 = thread::spawn(move || {
+        for _ in 0..COUNT {
+            let mut value = clone2.lock().unwrap();
+            *value -= 1;
+            if *value < 100_000 {
+                println!("make a panic");
+                panic!("");
+            }
+        }
+    });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    thread1.join().ok();
+    thread2.join().ok();
+    println!("final value: {:?}", global);
+}
 
