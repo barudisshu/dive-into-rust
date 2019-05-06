@@ -7,6 +7,6 @@
 #![warn(unreachable_code)]
 #![feature(maybe_uninit)]
 
-mod chap20;
+mod chap24;
 
-use crate::chap20::*;
+use crate::chap24::*;

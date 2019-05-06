@@ -190,7 +190,7 @@ fn _20_01_07_split_borrow() {
 /// Rust不支持普通泛型参数类型的协变和逆变，只对声明周期泛型参数存在协变和逆变
 ///
 #[test]
-fn _20_05_01_convariant() {
+fn _20_05_01_covariant() {
     type StrRef<'a> = &'a str;
 
     fn print_str<'b>(s: StrRef<'b>) {
@@ -204,25 +204,139 @@ fn _20_05_01_convariant() {
     // 这种现象在类型系统中被称为“协变”（covariance）和“逆变”（contravariance）。
 }
 
+///
+/// 协变和逆变的定义如下。我们用`<"`符号记录子类型关系，对于泛型类型`C<T>`，
+///
+/// - 协变 若`T1<:T2`时满足`C<T1> <: C<T2>`，则`C`对于参数`T`是协变关系。
+/// - 逆变 若`T1<:T2`时满足`C<T2> <: C<T1>`，则`C`对于参数`T`是逆变关系。
+/// - 不变 上述两种都不成立。
+///
+/// 如果类型构造器保持了参数的子类型关系，就是协变；如果逆转了参数的子类型关系，就是逆变。其他情况，就是不变。
+///
+/// Rust不支持普通泛型参数类型的协变和逆变，只对生命周期泛型参数存在协变和逆变。
+///
+///
+#[test]
+fn _20_05_02_convariant() {
+
+    fn test1<'a>(s: &'a &'static str) {
+        let local: &'a &'a str = s;
+    }
+
+    // 出现生命周期错误。说明从`&'a mut &'static str`类型到`&'a mut &'a str`类型的转换是不安全的。
+    // `&mut`型指针针对泛型`T`参数是不变的。
+    // ILLEGAL: fn test2<'a>(s: &'a mut &'static str) {
+    // ILLEGAL:     let local: &'a mut &'a str = s;
+    // ILLEGAL: }
+
+    // 编译通过，说明从`Box<&'static str>`类型到`Box<&'a str>`类型的转换是安全的。
+    // `Box<T>`类型针对`T`参数是具备协变关系的。
+    fn test3<'a>(s: Box<&'static str>) {
+        let local: Box<&'a str> = s;
+    }
+
+    // 类型`fn(T) -> U`对于泛型参数T具备协变关系
+    fn test_arg<'a>(f: fn(&'a str)) {
+        let local: fn(&'static str) = f;
+    }
+
+    // 类型`fn(T) -> U`对于泛型参数U具备逆变关系
+    fn test_ret<'a>(f: fn() -> &'a str) {
+        f();
+    }
+
+    // 编译出现了生命周期不匹配的错误。说明`Cell<T>`类型针对`T`参数不具备协变关系。
+    // 具备内部可变性的类型还有生命周期协变关系，可以构造出悬空指针的情况。
+    // 所以需要编译器提供的UnsafeCell来表达针对类型参数具备“不变”关系的泛型类型
+    // fn test5<'a>(s: std::cell::Cell<&'static str>) {
+    //     let local: std::cell::Cell<&'a str> = s;
+    // }
+
+    // `*const T`针对`T`参数具备协变关系，而`*mut T`针对`T`参数是不变关系。
+    // 比如标准库里面的`Box<T>`，它的内部包含了一个裸指针，这个裸指针就是用的`*const T`而不是`*mut T`。
+    // 这是因为我们希望`Box<T>`针对`T`参数具备协变关系，而`*mut T`无法提供。
+    // fn test6<'a>(s: *mut &'static str) {
+    //     let local: *mut &'a str = s;
+    // }
+}
 
 
+///
+/// 在写unsafe代码的时候，我们经常会碰到一种情况，那就是一个类型是带有生命周期参数的，
+/// 它表达的是一种借用关系。可以它内部是用裸指针实现的。请注意，裸指针是不带声明周期参数的。
+/// 我们需要使用PhantomData来表达这个信息
+///
+///
+#[test]
+fn _20_05_03_phantom_data() {
+    use std::fmt::Debug;
+    use std::ptr::null;
+    use std::marker::PhantomData;
+
+    #[derive(Copy, Clone, Debug)]
+    struct S;
+
+    #[derive(Debug)]
+    struct R<'a, T: Debug + 'a> {
+        x: *const T,
+        marker: PhantomData<&'a T>,
+    }
+
+    impl<'a, T:Debug> Drop for R<'a, T> {
+        fn drop(&mut self) {
+            unsafe {
+                println!("Dropping R while S {:?}", *self.x);
+            }
+        }
+    }
+
+    impl<'a, T:Debug + 'a> R<'a, T> {
+        pub fn ref_to<'b: 'a>(&mut self, obj: &'b T) {
+            self.x = obj;
+        }
+    }
+
+    let mut r = R { x: null(), marker: PhantomData };
+    let local = S {  };
+    r.ref_to(&local);
+    //       ^^^^^^ 编译器获取到生命周期错误信息
+}
 
 
+///
+/// 未定义行为，简称UB，
+///
+/// Rust中的UB被限制在一个较小范围，只有unsafe代码有可能制造出UB，这也是在写unsafe代码需要注意的地方
+///
+/// 下面列举一些undefined behavior，
+///
+/// - 数据竞争
+/// - 解引用空指针或者悬空指针
+/// - 使用未对齐的指针读写内存而不是使用`read_unaligned`或者`write_unaligned`
+/// - 读取未初始化内存
+/// - 破坏指针别名规则
+/// - 通过共享引用修改变量(除非数据是被UnsafeCell包裹的)
+/// - 调用编译器内置函数制造UB
+/// - 给内置类型赋予非法值
+/// - 给引用或者Box赋值为空或者悬空指针
+/// - 给bool类型赋值为0和1之外的数字
+/// - 给enum类型赋予类型定义之外的tag标记
+/// - 给char类型赋予超过`char::MAX`的值
+/// - 给str类型赋予非utf-8编码的值
+///
+///
+/// Rust的unsafe最大的问题在于，到目前为止，依然没有一份官方文档来明确哪些东西是用户可以依赖的、哪些是编译器实现相关的、
+/// 哪些是以后永远不变的、哪些是将来可能会有变化的。所以，哪怕用户能确保自己写出来的unsafe代码在目前版本上是完全正确的，
+/// 也没办法确保不会在以后的版本中出问题。如果以后编译器的实现发生了变化，导致了unsafe代码无法正常工作，究竟算是编译器的bug
+/// 还是用户错误地依赖了某些特性，还说不清楚。正式的unsafe guideline还在继续编写过程中。（当然这种错误情况几率是很低的，
+/// 绝大多数用户使用unsafe的时候都是在FFI场景下，不会涉及那些精微细密的语义规则。）
+///
+///我们既不能过于滥用unsafe，也不该对它心怀恐惧。它只是表明，某些代码的安全性依赖于某些条件，
+/// 而我们无法清晰地在代码中表达这些约束条件，因此无法由编译器帮我们自动检查。
+///
+///unsafe是Rust的一块重要拼图，充分理解unsafe的意义和作用，才能让我们更好地理解safe的来源和可贵。
+///
+#[test]
+fn _20_06_01_undefined_behavior() {
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}
