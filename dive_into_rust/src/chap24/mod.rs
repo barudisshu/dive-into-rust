@@ -11,8 +11,6 @@
 //!
 
 
-use crate::chap24::Foo;
-
 ///
 ///
 ///
@@ -125,6 +123,7 @@ fn _23_01_01_trait_object() {
 #[test]
 fn _23_02_01_object_safe() {
 
+    // 如果给Self加上Sized约束
     trait Foo where Self: Sized {
         fn foo(&self);
     }
@@ -141,34 +140,90 @@ fn _23_02_01_object_safe() {
     // p.foo();
 }
 
+#[test]
+fn _23_02_02_object_safe() {
+
+    trait Foo {
+        fn foo1(&self);
+        fn foo2(&self) where Self: Sized;
+    }
+
+    impl Foo for i32 {
+        fn foo1(&self) {
+            println!("foo1 {}", self);
+        }
+
+        fn foo2(&self) where Self: Sized {
+            println!("foo2 {}", self);
+        }
+    }
+
+    let x= 1_i32;
+    x.foo2();
+    let p = &x as &dyn Foo;
+    // ILLEGAL: p.foo2();   // 报错
+
+    // 如果我们针对foo2函数添加了`Self: Sized`约束，那么就不能通过trait object来调用这个函数
+}
+
+#[test]
+fn _23_02_03_object_safe() {
+    trait Double {
+        fn new() -> Self where Self: Sized;
+        fn double(&mut self);
+    }
+    impl Double for i32 {
+        fn new() -> Self where Self: Sized { 0 }
+        fn double(&mut self) { *self *= 2; }
+    }
+    let mut i = 1;
+    let p: &mut dyn Double = &mut i as &mut dyn Double;
+    p.double();
+}
 
 
+///
+/// impl trait
+///
+/// 为了解决闭包作为返回值的问题，aturon引入了impl trait方案
+///
+#[test]
+fn _23_03_01_impl_trait() {
+    fn foo(n: u32) -> impl Iterator<Item=u32> {
+        (0..n).map(|x| x * 100)
+    }
 
+    // 由于返回值是闭包，需要实现一种不用匿名装箱的操作
+    fn multiply(m: i32) -> impl Fn(i32)->i32 {
+        move |x|x*m
+    }
 
+    let f = multiply(5);
+    println!("{}", f(2));
 
+    // 这里的`impl Fn (i32) -> i32`表示，这个返回类型，虽然我们不知道它的具体名字，但是知道它
+    // 满足`Fn (size) -> isize`这个trait的约束。因此，它解决了“返回不装箱的抽象类型”问题。
 
+    // 它跟泛型函数的主要区别是：泛型函数的类型参数是函数的调用者指定的；
+    // impl trait的具体类型是函数的实现体指定的。
 
+    // - 让`impl trait`用在函数参数中
+    fn test(f: impl Fn(i32) -> i32) {}
 
+    // - 让`impl trait`用在类型别名中
+    type MyIter = impl Iterator<Item=i32>;
 
+    // - 让`impl trait`用在trait中的方法参数或返回值中
+    trait MyTrait {};
+    trait Test {
+        fn test() -> impl MyTrait;
+    }
 
+    // - 让`impl Trait`用在trait中的关联类型中
+    trait Test1 {
+        type AT = impl MyTrait;
+    }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    // 某些场景下，`impl trait`这个语法具有明显的优势，因为它可以提高语言的表达能力。
+    // 但不要过激地使用这个功能
+}
