@@ -8,7 +8,9 @@
 #![feature(maybe_uninit)]
 #![feature(dyn_trait)]
 #![feature(conservative_impl_trait)]
+#![feature(generators)]
+#![feature(generator_trait)]
 
-mod chap25;
+mod chap26;
 
-use crate::chap25::*;
+use crate::chap26::*;

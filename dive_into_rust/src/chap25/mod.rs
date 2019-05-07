@@ -14,6 +14,7 @@
 //!
 
 use std::collections::vec_deque::VecDeque;
+use std::collections::btree_map::BTreeMap;
 
 ///
 /// 一个Vec中能存储的元素个数最多为`std::usize::MAX`个，超过了会发生panic。因为它记录元素个数，
@@ -132,7 +133,7 @@ fn _23_03_01_collections() {
 
     // 查找键对应的值
     if let Some(phone) = book.get(&p) {
-        pritnln!("Phone number found: {}", phone);
+        println!("Phone number found: {}", phone);
     }
 
     // 删除
@@ -142,31 +143,183 @@ fn _23_03_01_collections() {
     println!("Find key: {}", book.contains_key(&p));
 }
 
+///
+///
+/// HashMap里面，key存储的位置跟它本身的值密切相关，如果key本身变了，那么它存放的位置
+/// 也需要相应变化。所以，HashMap设计的各种API中，指向key的借用一般是只读借用，防止用户
+/// 修改它。但是，只读借用并不能完全保证它不被修改，读者应该能想到，只读借用依然可以改变具备
+/// 内部可变性特点的类型。
+///
+#[test]
+fn _23_03_02_collections() {
+    use std::hash::{Hash, Hasher};
+    use std::collections::HashMap;
+    use std::cell::Cell;
+
+    #[derive(Eq, PartialEq)]
+    struct BadKey {
+        value: Cell<i32>,
+    }
+
+    impl BadKey {
+        fn new(v: i32) -> Self {
+            BadKey { value: Cell::new(v) }
+        }
+    }
+
+    impl Hash for BadKey {
+        fn hash<H: Hasher>(&self, state: &mut H) {
+            self.value.get().hash(state);
+        }
+    }
+
+    let mut map = HashMap::new();
+    map.insert(BadKey::new(1), 100);
+    map.insert(BadKey::new(2), 200);
+
+    for key in map.keys() {
+        key.value.set(key.value.get() * 2);
+    }
+
+    println!("Find key 1:{:?}", map.get(&BadKey::new(1)));
+    println!("Find key 2:{:?}", map.get(&BadKey::new(2)));
+    println!("Find key 4:{:?}", map.get(&BadKey::new(4)));
+
+    // 这里设计了一个具备内部可变性的类型作为key。然后直接在容器内部把它的值改变，接下来继续做查找
+    // 可以看到，我们再也找不到这几个key了，不论是用修改前的key值，还是用修改后的key值，都找不到。这属于逻辑错误
+}
+
+///
+/// `BTreeMap`
+///
+/// BTreeMap对key的要求是满足Ord约束，即具备“全序”特征。
+///
+///
+#[test]
+fn _23_03_03_collections() {
+    use std::collections::BTreeMap;
+
+    #[derive(Ord, PartialOrd, PartialEq, Eq, Debug, Default)]
+    struct Person{
+        first_name: String,
+        last_name: String,
+    }
+
+    impl Person {
+        fn new(first: &str, last: &str) -> Self {
+            Person {
+                first_name: first.to_string(),
+                last_name: last.to_string(),
+            }
+        }
+    }
+
+    let mut book = BTreeMap::new();
+    book.insert(Person::new("John", "Smith"), "521-8976");
+    book.insert(Person::new("Sandra", "Dee"), "521-9655");
+    book.insert(Person::new("Ted", "Baker"), "418-4165");
+
+    let p = Person::new("John", "Smith");
+
+    // 查找键对应的值
+    if let Some(phone) = book.get(&p) {
+        println!("Phone number found: {}", phone);
+    }
+
+    // 删除
+    book.remove(&p);
+
+    // 查询是否存在
+    println!("Find key: {}", book.contains_key(&p));
+}
+
+///
+/// BTreeMap比HashMap多的一项功能是，它不仅可以查询单个key的结果，还可以查询一个区间的结果
+///
+#[test]
+fn _25_03_04_collections() {
+    use std::collections::BTreeMap;
+
+    let mut map = BTreeMap::new();
+    map.insert(3, "a");
+    map.insert(5, "b");
+    map.insert(8, "c");
+
+    for (k, v) in map.range(2..6) {
+        println!("{} : {}", k, v);
+    }
+}
+
+///
+/// 迭代器
+///
+///
+#[test]
+fn _25_04_01_collections() {
+    use std::iter::Iterator;
+
+    struct Seq {
+        current: i32,
+    }
+
+    impl Seq {
+        fn new() -> Self {
+            Seq { current: 0 }
+        }
+    }
+
+    impl Iterator for Seq {
+        type Item = i32;
+        fn next(&mut self) -> Option<i32> {
+            if self.current < 100 {
+                self.current += 1;
+                return Some(self.current);
+            } else {
+                return None;
+            }
+        }
+    }
+
+    let mut seq = Seq::new();
+    while let Some(i) = seq.next() {
+        println!("{}", i);
+    }
+}
+
+///
+/// Rust迭代器的强大之处在于可以组合，组合的形式由：
+///
+/// producer + adapter + consumer
+///
+///
+#[test]
+fn _25_04_02_collections() {
+    let v = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
+    let mut iter = v.iter()
+        .take(5)
+        .filter(|&x| x % 2 == 0)
+        .map(|&x| x * x)
+        .enumerate();
+    while let Some((i, v)) = iter.next() {
+        println!("{} {}", i, v);
+    }
+}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+///
+/// for循环 ，它实际上是对IntoIterator trait的语法糖
+///
+#[test]
+fn _25_05_01_collections() {
+    use std::collections::HashMap;
+    let v = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
+    for i in v {
+        println!("{}", i);
+    }
+    let map: HashMap<i32, char> = [].iter().cloned().collect();
+    for (k, v) in &map {
+        println!("{} : {}", k, v);
+    }
+}
 
 
