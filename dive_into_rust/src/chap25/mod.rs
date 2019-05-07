@@ -13,6 +13,8 @@
 //!
 //!
 
+use std::collections::vec_deque::VecDeque;
+
 ///
 /// 一个Vec中能存储的元素个数最多为`std::usize::MAX`个，超过了会发生panic。因为它记录元素个数，
 /// 用的就是usize类型》如果我们指定元素的类型是0大小的类型，那么，这个Vec根本不需要在堆上分配任何空间。
@@ -75,6 +77,70 @@ fn _23_01_02_collections() {
     println!("size of Vec: {} size of option vec: {}", size1, size2);
 }
 
+
+///
+/// `VecDeque`
+/// VecDeque是一个双向队列。在它的头部或者尾部执行添加或者删除操作，都是效率很高的。它的用法和Vec非常相似，
+/// 主要是多了`pop_front()` `push_front()`等方法。
+///
+#[test]
+fn _23_02_01_collections() {
+    use std::collections::VecDeque;
+
+    let mut queue = VecDeque::with_capacity(64);
+    // 向尾部书序插入一堆数据
+    for i in 1..10 {
+        queue.push_back(i);
+    }
+    // 从头部按顺序一个个取出来
+    while let Some(i) = queue.pop_front() {
+        println!("{}", i);
+    }
+}
+
+///
+/// `HashMap`
+/// Rust中的HashMap要求，key要满足Eq+Hash的约束，
+///
+/// HashMap的查找、插入、删除操作的平均时间复杂度都是O(1)。
+///
+#[test]
+fn _23_03_01_collections() {
+    use std::collections::HashMap;
+
+    #[derive(Hash, Eq, PartialEq, Debug)]
+    struct Person {
+        first_name: String,
+        last_name: String,
+    }
+
+    impl Person {
+        fn new(first: &str, last: &str) -> Self {
+            Person {
+                first_name: first.to_string(),
+                last_name: last.to_string(),
+            }
+        }
+    }
+
+    let mut book = HashMap::new();
+    book.insert(Person::new("John", "Smith"), "521-8976");
+    book.insert(Person::new("Sandra", "Dee"), "521-9655");
+    book.insert(Person::new("Ted", "Baker"), "418-4165");
+
+    let p = Person::new("John", "Smith");
+
+    // 查找键对应的值
+    if let Some(phone) = book.get(&p) {
+        pritnln!("Phone number found: {}", phone);
+    }
+
+    // 删除
+    book.remove(&p);
+
+    // 查询是否存在
+    println!("Find key: {}", book.contains_key(&p));
+}
 
 
 
