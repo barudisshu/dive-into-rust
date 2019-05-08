@@ -58,7 +58,7 @@ fn _16_01_01_interior_mutability() {
 /// 修改数据只能通过`Cell`来完成，用户无法创造一个直接指向数据的指针。
 ///
 ///
-/// ```rs
+/// ```
 /// impl<T> Cell<T> {
 ///     pub fn get_mut(&mut self) -> &mut T {}
 ///     pub fn set(&self, val: T) {}
@@ -105,7 +105,7 @@ fn _16_01_02_interior_mutability() {
 /// `RefCell`是另外一个提供了内部可变性的类型。它提供的方式与`Cell`类型有点不一样。`Cell`类型没办法制造出直接
 /// 指向内部数据的指针，而`RefCell`可以。
 ///
-/// ```rs
+/// ```
 /// impl<T: ?Sized> RefCell<T> {
 ///     pub fn borrow(&self) -> Ref<T> {}
 ///     pub fn try_borrow(&self) -> Result<Ref<T>, BorrowError> {}

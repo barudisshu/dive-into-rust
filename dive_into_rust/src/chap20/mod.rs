@@ -24,7 +24,7 @@ use std::intrinsics::uninit;
 ///
 /// 比如，`String::from_raw_parts`就是一个unsafe函数，它的签名如下：
 ///
-/// ```rs
+/// ```
 /// pub unsafe fn from_raw_parts(buf: *mut u8, length: usize, capacity: usize) -> String
 /// ```
 ///

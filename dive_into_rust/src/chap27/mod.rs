@@ -12,7 +12,7 @@
 ///
 /// `AsRef`得到另外一个类型的共享引用，
 ///
-/// ```rs
+/// ```
 /// pub trait AsRef<T: ?Sized> {
 ///     fn as_ref(&self) -> &T;
 /// }
@@ -20,7 +20,7 @@
 ///
 /// `AsMut`得到另外一个类型的可读写引用，
 ///
-/// ```rs
+/// ```
 /// pub trait AsMut<T: ?Sized> {
 ///     fn as_mut(&mut self) -> &mut T;
 /// }
@@ -28,7 +28,7 @@
 ///
 /// 标准库中的String，针对了好几个类型实现了AsRef trait，
 ///
-/// ```rs
+/// ```
 /// impl AsRef<str> for String
 /// impl AsRef<[u8]> for String
 /// impl AsRef<OsStr> for String
@@ -86,7 +86,7 @@ fn _27_01_03_from_into() {
 /// ToOwned trait提供的是一种更“泛化”的Clone的功能。Clone一般是从&T类型变量创造一个新的T类型变量，
 /// 而ToOwned一般是从一个&T类型变量创造一个新的U类型变量。
 ///
-/// ```rs
+/// ```
 /// pub enum Cow<'a, B>
 ///     where
 ///         B: 'a + ToOwned + ?Sized,

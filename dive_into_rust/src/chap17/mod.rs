@@ -25,7 +25,7 @@ fn _17_01_01_deref() {
 /// 解引用的操作可以被自定义。方法是，实现标准库中的`std::ops::Deref`或者`std::ops::DerefMut`这两个trait
 ///
 ///
-/// ```rs
+/// ```
 ///pub trait Deref {
 ///  type Target: ?Sized;
 ///  fn deref(&self) -> &Self::Target;
@@ -146,7 +146,7 @@ fn _17_01_05_handle_deref() {
 /// - `Rc`类型的引用计数是普通整数操作，只能用在单线程中；
 /// - `Arc`类型的引用计数是原子操作，可以用在多线程中。这一点是通过编译器静态检查保证的。
 ///
-/// ```rs
+/// ```
 /// impl<T: ?Sized> Deref for Rc<T> {
 ///     type Target = T;
 ///
@@ -187,7 +187,7 @@ fn _17_02_01_smart_pointer() {
 ///
 /// Rc智能指针内部实现了Clone和Drop，在clone方法，它没有对内部的数据实行深复制，而是将强引用计数值加1
 ///
-/// ```rs
+/// ```
 /// impl<T: ?Szied> Clone for Rc<T> {
 ///     #[inline]
 ///     fn clone(&self) -> Rc<T> {
@@ -203,7 +203,7 @@ fn _17_02_01_smart_pointer() {
 /// 在drop方法中，也没有直接把内部数据释放掉，而是将强引用计数值减1，当强引用计数值减到0的时候，才会析构掉共享的
 /// 那块数据。当弱引用计数值也减为0的时候，才说明没有任何Rc/Weak指针指向这块内存，它占用的内存才会被彻底释放。
 ///
-/// ```rs
+/// ```
 /// unsafe impl<#[may_dangle] T: ?Szied> Drop for Rc<T> {
 ///     fn drop(&mut self) {
 ///         unsafe {
@@ -254,7 +254,7 @@ fn _17_02_02_smart_pointer() {
 ///
 /// Cow在标准库中是一个enum：
 ///
-/// ```rs
+/// ```
 /// pub enum Cow<'a, B: ?Sized + 'a> where B: ToOwned {
 ///     /// Borrowed data.
 ///     Borrowed(&'a B),

@@ -25,7 +25,7 @@ fn _22_01_01_generic() {
 ///
 /// 泛型函数
 ///
-/// ```rs
+/// ```
 /// fn contains<'a, P: Pattern<'a>>(&'a self, pat: P) -> bool
 /// ```
 ///
@@ -61,7 +61,7 @@ fn _22_01_02_method() {
 
 /// impl块中的泛型
 ///
-/// ```rs
+/// ```
 ///impl<T, U> Into<U> for T where U: From<T> {
 ///   fn into(self) -> U {
 ///       u::from(self)
@@ -163,7 +163,7 @@ fn _22_01_04_generic_limit_example_derive() {
 ///
 /// 关联类型(类型投影)
 ///
-/// ```rs
+/// ```
 /// pub trait Iterator {
 ///    type Item;
 ///    ...
